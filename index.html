@@ -6,32 +6,127 @@
 <title>丙級水準 VR 練習</title>
 <style>
   html,body{margin:0;height:100%;overflow:hidden;background:#bcd4e6;font-family:system-ui,"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;color:#2b2a27}
-  #hud{position:fixed;left:12px;top:12px;width:min(380px,calc(100vw - 24px));max-height:calc(100vh - 90px);overflow:auto;box-sizing:border-box;background:#fffffff0;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.7;box-shadow:0 1px 4px #0003}
-  #hud h1{font-size:16px;margin:0 0 4px}
-  #hud p{margin:6px 0}
-  #hud kbd{display:inline-block;min-width:1.4em;padding:0 4px;border:1px solid #bbb;border-bottom-width:2px;border-radius:4px;background:#f6f6f6;font-family:inherit;font-size:12px;text-align:center}
-  #hud .muted{color:#6b6860}
-  #hud button{font:inherit;padding:6px 10px;margin:2px 4px 2px 0;border-radius:8px;border:1px solid #9a968c;background:#fff;cursor:pointer}
-  #hud button.pri{background:#1f5fa8;color:#fff;border-color:#1f5fa8}
-  #hudToggle{position:fixed;left:12px;top:12px;display:none;font:inherit;padding:6px 10px}
-  #xr{position:fixed;right:12px;bottom:12px;padding:12px 18px;font-size:16px;border:0;border-radius:10px;background:#1f5fa8;color:#fff;cursor:pointer}
-  #xr:disabled{background:#8a8f96;cursor:default}
+  :root{--blue:#1f5fa8;--green:#2f7d32;--amber:#a86a00;--red:#c0281e;--ink:#2b2a27;--muted:#6b6860;--line:#d5d1c6;--card:#fffffff2}
+  #ui button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid #9a968c;background:#fff;color:var(--ink);padding:8px 14px;touch-action:none;user-select:none}
+  #ui button:hover{filter:brightness(.96)}
+  #ui button.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+  #ui button.ghost{background:transparent;border-color:transparent;color:var(--blue)}
+  .hide{display:none!important}
+  /* 上方列 */
+  #top{position:fixed;left:0;right:0;top:0;height:52px;display:flex;align-items:center;gap:8px;padding:0 12px;background:#ffffffe8;box-shadow:0 1px 4px #0002;font-size:15px;z-index:5}
+  #top .sp{flex:1}
+  #prog{display:flex;gap:4px;align-items:center;flex-wrap:nowrap;overflow:hidden}
+  #prog span{padding:4px 10px;border-radius:999px;color:#9a968c;white-space:nowrap;font-size:14px}
+  #prog span.done{color:var(--green)}
+  #prog span.on{background:var(--blue);color:#fff}
+  #top button{padding:6px 12px!important;font-size:14px}
+  #xr{border:0!important;background:var(--blue)!important;color:#fff!important}
+  #xr:disabled{background:#8a8f96!important;cursor:default}
+  /* 主選單 */
+  #menu{position:fixed;inset:52px 0 0 0;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+  #menu .box{background:var(--card);border-radius:16px;box-shadow:0 4px 20px #0003;padding:28px;width:min(560px,100%);box-sizing:border-box}
+  #menu h1{margin:0 0 4px;font-size:26px}
+  #menu .lead{margin:0 0 20px;color:var(--muted);font-size:16px}
+  #menu button.mode{display:block;width:100%;text-align:left;padding:16px 18px;margin:0 0 12px;border-width:2px}
+  #menu .mode b{display:block;font-size:20px;margin-bottom:2px}
+  #menu .mode small{color:var(--muted);font-size:15px}
+  #menu .m1{border-color:var(--blue)!important;background:#eef3fa!important}
+  #menu .m1 b{color:var(--blue)}
+  #menu .m2 b{color:var(--green)}
+  #menu .foot{color:var(--muted);font-size:13px;margin:8px 0 0}
+  /* 步驟卡 */
+  #card{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(640px,calc(100vw - 32px));box-sizing:border-box;background:var(--card);border-radius:16px;box-shadow:0 4px 20px #0003;padding:18px 22px;font-size:16px;line-height:1.55;z-index:4}
+  #card h2{margin:0;font-size:24px;color:var(--ink)}
+  #card .sub{margin:4px 0 0;color:var(--muted);font-size:16px}
+  #card .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  #card .row.end{justify-content:flex-end}
+  #card .status{margin-top:10px;font-weight:600;font-size:17px}
+  #card .ok{color:var(--green)} #card .warn{color:var(--amber)} #card .bad{color:var(--red)}
+  #card .howto{margin-top:10px;background:#f4f2ec;border-radius:10px;padding:8px 12px;font-size:15px}
+  #card .inp{width:200px;height:44px;box-sizing:border-box;border:2px solid var(--blue);border-radius:10px;padding:0 12px;font:inherit;font-size:24px;font-variant-numeric:tabular-nums;background:#fff;color:#111;outline:none}
+  #card .inp::placeholder{color:#aaa;font-size:16px}
+  #card .inp:focus{box-shadow:0 0 0 3px #1f5fa833}
+  #card .formula{margin-top:12px;background:#eef3fa;border-radius:10px;padding:10px 14px;font-size:20px;font-variant-numeric:tabular-nums}
+  #card .formula small{display:block;font-size:14px;color:var(--muted)}
+  #card .chips span{display:inline-block;background:#f4f2ec;border-radius:8px;padding:2px 8px;margin:2px 4px 2px 0;font-size:15px}
+  #card .hint{margin-top:8px;color:#8a5a00;font-size:15px}
+  #card .lvl{display:flex;gap:16px;align-items:center;margin-top:10px}
+  #bubHost canvas{width:120px;height:120px;border-radius:12px;display:block}
+  .screws{display:flex;gap:10px}
+  .screws .g{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:14px}
+  .screws .g div{display:flex;gap:4px}
+  .screws button{font-size:22px!important;padding:4px 14px!important;border-width:2px!important}
+  .screws button.hot{animation:pulse 1s infinite;box-shadow:0 0 0 4px #ff8a1c88}
+  @keyframes pulse{50%{box-shadow:0 0 0 8px #ff8a1c33}}
+  #card svg{width:100%;height:auto;margin-top:8px}
+  #card table.score{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}
+  #card table.score td{padding:4px 6px;border-bottom:1px solid #eee}
+  #card .gloss{margin-top:10px;max-height:28vh;overflow:auto;font-size:15px}
+  #card .gloss div{padding:3px 0;border-bottom:1px dashed #e4e0d6}
+  #card .gloss b{display:inline-block;min-width:6.5em;color:var(--blue)}
+  /* 望遠鏡 */
+  #tel{position:fixed;right:24px;top:72px;width:min(calc(100vh - 150px),calc(100vw - 700px),560px);min-width:220px;aspect-ratio:1;z-index:3;pointer-events:none}
+  #tel.big{width:min(calc(100vh - 130px),720px);right:50%;transform:translateX(50%);z-index:6}
+  #card.side{left:16px;transform:none;width:min(600px,calc(100vw - 32px))}
+  #telRing{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 6px #1b1b1b,0 4px 18px #0006}
+  #telCap{position:absolute;left:0;right:0;top:calc(100% + 10px);display:flex;gap:6px;justify-content:center;align-items:center;pointer-events:auto;font-size:14px;color:var(--ink)}
+  #telCap span{background:#ffffffdd;border-radius:8px;padding:3px 8px}
+  #telCap button{padding:4px 10px!important;font-size:14px}
+  /* 記錄表 */
+  #book{position:fixed;left:16px;top:68px;background:var(--card);border-radius:14px;box-shadow:0 2px 12px #0002;padding:10px 12px;font-size:14px;z-index:3;max-width:calc(100vw - 32px);box-sizing:border-box}
+  #book .bh{display:flex;align-items:center;gap:8px;font-weight:600}
+  #book .bh button{padding:2px 10px!important;font-size:13px}
+  #book table{border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
+  #book th,#book td{border:1px solid var(--line);padding:3px 8px;text-align:center;min-width:58px}
+  #book th{background:#efece4;font-weight:500}
+  #book th small,#book td small{display:block;color:#9a968c;font-size:11px;line-height:1.1}
+  #book td.name{text-align:left;background:#faf9f5}
+  #book td.x{background:#ebe8df}
+  #book td.ed{cursor:pointer;background:#fff}
+  #book td.ed:hover{background:#eef3fa}
+  #book td.hl{background:#ffe28a;outline:2px solid #c99a00}
+  #book .cap{margin-top:8px;color:var(--blue);font-weight:600}
+  /* 其他 */
+  #toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);background:#2f7d32;color:#fff;border-radius:12px;padding:10px 18px;font-size:16px;box-shadow:0 4px 14px #0003;z-index:6;max-width:calc(100vw - 32px);text-align:center}
+  #toast b{color:#fff3b0}
+  #home{position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:5;font-size:16px}
+  #help{position:fixed;right:12px;top:60px;width:min(340px,calc(100vw - 24px));background:#fff;border-radius:12px;box-shadow:0 4px 16px #0003;padding:12px 16px;font-size:14px;line-height:1.8;z-index:7}
+  #help kbd{display:inline-block;min-width:1.3em;padding:0 4px;border:1px solid #bbb;border-bottom-width:2px;border-radius:4px;background:#f6f6f6;font-family:inherit;font-size:12px;text-align:center}
+  @media (max-width:980px){#tel{width:min(42vw,42vh)!important;min-width:0}#card.side{width:calc(100vw - 32px)}#prog span:not(.on){display:none}}
 </style>
 </head>
 <body>
-<div id="hud">
-  <h1>水準測量 VR 練習（丙級・直接水準）</h1>
-  <p>先選模式。第一次用請選「簡要練習」（約 5 分鐘），系統會一步一步帶你做；想照考試流程做完 4 個測站，請選「完整練習」。</p>
-  <p><button class="pri" id="mPractice">簡要練習</button><button id="mFull">完整練習</button><button id="mExam">實戰模式</button></p>
-  <p><b>電腦操作</b>（Quest 上用手把，見右側面板說明）<br>
-  拖曳滑鼠：看四周　滾輪：放大縮小<br>
-  點面板上的按鈕：<b>點一下 = 轉一小格，按住 = 連續轉</b><br>
-  <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>（或方向鍵）在場地裡走動，加 <kbd>Shift</kbd> 跑步（實戰模式不能走動）。走遠了，畫面下方會出現「回到測站」按鈕<br>
-  儀器用滑鼠點面板操作　數字鍵／+−×÷：輸入讀數或算式　Enter：確認</p>
-  <p><button id="hideHud">收起說明</button></p>
+<div id="ui">
+  <div id="top">
+    <button class="ghost" id="tMenu">☰ 選單</button>
+    <div id="prog"></div>
+    <div class="sp"></div>
+    <button id="tPrev">◀ 上一步</button><button id="tSkip">跳過 ▶</button>
+    <button id="tHelp" title="操作說明">?</button>
+    <button id="xr" disabled>檢查 VR…</button>
+  </div>
+  <div id="menu"><div class="box">
+    <h1>水準測量入門練習</h1>
+    <p class="lead">用水準儀量出 D 點有多高（丙級術科第二部分）</p>
+    <button class="mode m1" id="mPractice"><b>簡要練習・約 5 分鐘</b><small>第一次用選這個：親手做一站，重複的部分系統代勞</small></button>
+    <button class="mode m2" id="mFull"><b>完整練習・約 20 分鐘</b><small>4 站全部自己做，流程和考試一樣，有提示</small></button>
+    <button class="mode" id="mExam"><b>實戰模式</b><small>沒有提示、數字隨機，做完依考試標準計分</small></button>
+    <p class="foot">有 VR 頭盔？用頭盔的瀏覽器開這個網址，按右上角「進入 VR」。</p>
+  </div></div>
+  <div id="card" class="hide"></div>
+  <div id="tel" class="hide"><div id="telRing"></div><div id="telCap"><span>望遠鏡裡看到的</span><button id="telZoom">放大</button><button id="telBig">看大一點</button></div></div>
+  <div id="book" class="hide"></div>
+  <div id="toast" class="hide"></div>
+  <button id="home" class="pri hide">⌂ 回到儀器旁</button>
+  <div id="help" class="hide">
+    <b>電腦操作</b><br>
+    滑鼠拖曳畫面：看四周　滾輪：拉近拉遠<br>
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>：走動（<kbd>Shift</kbd> 跑步）<br>
+    卡片上的按鈕：點一下動一點，按住會一直動<br>
+    輸入數字：直接用鍵盤打，按 <kbd>Enter</kbd> 確認<br>
+    <b>VR 頭盔</b>：按「進入 VR」，用手把射線點面板
+  </div>
 </div>
-<button id="hudToggle">說明</button>
-<button id="xr" disabled>檢查 VR 支援中…</button>
 
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -225,7 +320,8 @@ function staffCanvas(m) {
 const staffBodyM = new THREE.MeshLambertMaterial({ color: 0xe8d9a0 });
 const staffFaceM = staffTex.map(t => new THREE.MeshBasicMaterial({ map: t }));
 const staffs = [], roleLabels = [], markers = [];
-const ROLE = ['C 已知點（HC = 30.000）', 'TP1 轉點（往測用）', 'D 待測點（求 HD）', 'TP2 轉點（返測用）'];
+const ROLE = ['C 起點（高度 30.000 m）', '中途點 1', 'D 終點（求它的高度）', '中途點 2'];
+const SIGN = ['C', '①', 'D', '②'];
 const stakeM = new THREE.MeshLambertMaterial({ color: 0x9a7448 }), nailM = new THREE.MeshLambertMaterial({ color: 0x777777 }), plateM = new THREE.MeshLambertMaterial({ color: 0x3a3d42 });
 function signTex(txt) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d');
@@ -247,7 +343,7 @@ function buildStakes() {
     }
     const sz = z0 > 0 ? z0 + 0.7 : z0 - 0.7;
     mk.add(at(new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.7, 0.03), stakeM), x0 + 0.5, groundAt(x0) + 0.35, sz));
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), new THREE.MeshBasicMaterial({ map: signTex(NAMES[i]), side: THREE.DoubleSide }));
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), new THREE.MeshBasicMaterial({ map: signTex(SIGN[i]), side: THREE.DoubleSide }));
     mk.add(at(sign, x0 + 0.5, groundAt(x0) + 0.8, sz));
     stakeGroup.add(mk); markers.push(mk);
     const st = new THREE.Group(); st.position.set(x0, top, z0); st.userData.pt = i;
@@ -1090,23 +1186,12 @@ function buildSteps(pm) {
       '往測：C → TP1 → D（L1、L2 兩站）；返測：D → TP2 → C（L3、L4 兩站）。每站讀兩把尺：先後視、再前視。',
       '簡要練習：你親手做完 L1 的整平、瞄準、對焦、讀尺；L2 只要讀尺；L3、L4 跟前面一樣，由系統代勞。'] });
   } else {
-    s.push({ kind: 'info', title: '認識水準儀', body: [
-      '水準儀是一支「會自己保持水平」的望遠鏡，架在三腳架上。',
-      '它的工作只有一個：看遠處的尺，讀出「水平視線」碰到尺的高度。',
-      '大大的喇叭口、紅色環的那一頭是鏡頭（前面）；小小黑色眼罩那頭是目鏡（後面）。紅色虛線是鏡頭看出去的方向。',
-      '前方圓形的畫面，就是從目鏡看進去會看到的東西。'] });
     s.push({ kind: 'info', title: '這次的任務（跟考試一樣）', body: [
       '已知 C 點的高程 HC = 30.000 m，要求出 D 點的高程 HD（丙級術科第二部分：直接水準測量）。',
       '往測：C → TP1 → D。儀器先架在 L1 讀 C、TP1，再搬到 L2 讀 TP1、D。',
       '返測：D → TP2 → C。L3 讀 D、TP2，L4 讀 TP2、C。返測是用來檢查的；TP2 規定不能和 TP1 放在同一個位置。',
       '每一站都是：整平 → 瞄準後視尺 → 對焦 → 讀數 → 瞄準前視尺 → 對焦 → 讀數。共 8 個讀數。'] });
   }
-  s.push({ kind: 'info', title: '怎麼讀尺（5 mm 刻劃尺）', body: [
-    '尺面每 1 公尺換一次底色：白 → 黃 → 白。',
-    '右邊的小黑字是「公分數」：149 代表 1.49 m，數字對齊它那條刻線。',
-    '紅色大字是公寸（0.1 m），它上面的紅點數 = 公尺數；整公尺的地方寫紅字＋「M」。',
-    '中間的黑白方塊每塊 5 mm，用來估最後的毫米。',
-    '讀法：找到中線「下面」最近的小黑字（例 149），再估中線比那條刻線高幾 mm（例 3）→ 1.493。'] });
   const station = (si, full) => {
     if (full) s.push({ kind: 'level', si });
     ST_DEF[si].pts.forEach(pt => {
@@ -1178,7 +1263,7 @@ function goStep(i) {
   gi = i; gHold = 0; inp = ''; inpMsg = ''; gTries = 0; gShowHint = false;
   applyLayout(); drawFB();
 }
-function nextStep() { gFlash = 0.9; goStep(gi + 1); }
+function nextStep() { gFlash = 0.9; webDone(steps[gi]); goStep(gi + 1); }
 function skipStep() { fillStep(steps[gi]); goStep(gi + 1); }
 function prevStep() { goStep(gi - 1); }
 function practiceKey(k) {
@@ -1201,6 +1286,11 @@ function submitPractice() {
     gTries++;
     inpMsg = `差了 ${Math.abs(e) >= 1000 ? (Math.abs(e) / 1000).toFixed(3) + ' m' : Math.abs(e) + ' mm'}（${e > 0 ? '太大' : '太小'}），再試一次。`; inpMsgCol = '#c0281e';
     if (st.key === 'W' && v < 0) inpMsg += ' W 取絕對值，是正的。';
+    else if (!read) {
+      const r = solve(vals);
+      if (r && Math.abs(r[st.key]) > 0.0005 && Math.abs(v + r[st.key]) < 0.0015) inpMsg = '數字對了，但正負號相反。想想：先讀的加起來，減掉後讀的加起來。';
+      else if (st.key === 'hAvg' && Math.abs(v - (vals.hCD + vals.hDC) / 2) < 0.0015) inpMsg = '回程的高低差方向相反，要先變號（減掉它）再平均。';
+    }
     if (gTries >= 2) gShowHint = true;
     drawFB();
   }
@@ -1340,6 +1430,7 @@ let gRedraw = 0, ctlRedraw = 0, examRedraw = 0, PMODE = 'brief';
 // m = 'menu' | 'practice' | 'exam'；pm = 'brief'（簡要練習）| 'full'（完整練習）
 function startMode(m, pm) {
   MODE = m; if (pm) PMODE = pm;
+  webReset();
   D = genData(m !== 'exam'); buildGround(); buildStakes(); resetBook(); lastCat = ''; recKey = ''; calcLayout = null; placeStation(0);
   setZoom(1); setBig(false);
   placeWins();
@@ -1419,7 +1510,7 @@ addEventListener('keydown', e => {
 });
 let look = { yaw: 0, pitch: -0.3 }, drag = null;
 const ray = new THREE.Raycaster(); ray.layers.set(UI);
-const clickables = () => [...(homeBtn.mesh.visible ? [homeBtn.mesh] : []), ...wins.flatMap(w => w.g.visible ? [w.bar.mesh, ...(w.collapsed ? [] : [w.body.mesh])] : []), ...screwMeshes];
+const clickables = () => webOn() ? screwMeshes : [...(homeBtn.mesh.visible ? [homeBtn.mesh] : []), ...wins.flatMap(w => w.g.visible ? [w.bar.mesh, ...(w.collapsed ? [] : [w.body.mesh])] : []), ...screwMeshes];
 // src = 'mouse' 或某支手把：按在標題列空白處 → 開始拖曳面板
 function pressHit(h, src) {
   if (!h) return false;
@@ -1467,9 +1558,6 @@ addEventListener('pointermove', e => {
 addEventListener('pointerup', () => { drag = null; endPress(); endDrag('mouse'); });
 renderer.domElement.addEventListener('wheel', e => { camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 15, 80); camera.updateProjectionMatrix(); }, { passive: true });
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
-const hud = document.getElementById('hud'), hudToggle = document.getElementById('hudToggle');
-document.getElementById('hideHud').onclick = () => { hud.style.display = 'none'; hudToggle.style.display = 'block'; };
-hudToggle.onclick = () => { hud.style.display = 'block'; hudToggle.style.display = 'none'; };
 document.getElementById('mPractice').onclick = () => startMode('practice', 'brief');
 document.getElementById('mFull').onclick = () => startMode('practice', 'full');
 document.getElementById('mExam').onclick = () => startMode('exam');
@@ -1692,9 +1780,9 @@ const lbA = new V3(), lbT = new V3(), lbR = new V3(), lbP = new V3();
 const xrBtn = document.getElementById('xr');
 if (navigator.xr) {
   navigator.xr.isSessionSupported('immersive-vr').then(ok => {
-    xrBtn.disabled = !ok; xrBtn.textContent = ok ? '進入 VR' : '此瀏覽器不支援 VR（可用電腦操作）';
+    xrBtn.disabled = !ok; xrBtn.textContent = ok ? '進入 VR' : '電腦版'; xrBtn.title = ok ? '' : '這個瀏覽器不支援 VR，用滑鼠操作即可';
   });
-} else xrBtn.textContent = '此瀏覽器不支援 VR（可用電腦操作）';
+} else { xrBtn.textContent = '電腦版'; xrBtn.title = '這個瀏覽器不支援 VR，用滑鼠操作即可'; }
 xrBtn.onclick = async () => {
   if (renderer.xr.isPresenting) { renderer.xr.getSession().end(); return; }
   const s = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] });
@@ -1702,6 +1790,282 @@ xrBtn.onclick = async () => {
   follow.force = follow.snap = true; if (ctlTab === 'help') drawCtl();      // 進 VR 時面板重新排到你面前；「離開 VR」按鈕出現
   s.addEventListener('end', () => { xrBtn.textContent = '進入 VR'; if (ctlTab === 'help') drawCtl(); });
 };
+
+// ═════════════ 電腦版介面（不在 VR 時）═════════════
+// 設計原則：一次只講一件事（一張步驟卡）、先用白話、做完才告訴你正式名詞；VR 裡仍用原本的 3D 面板
+const $ = id => document.getElementById(id);
+const show = (el, b) => el.classList.toggle('hide', !b);
+const webOn = () => !renderer.xr.isPresenting;
+const PN = ['C', '中途點1', 'D', '中途點2'];
+const stN = si => `第 ${si + 1} 站`;
+const f3 = x => isFinite(x) ? x.toFixed(3) : '?';
+const sg3 = x => isFinite(x) ? fmtV('h', x) : '?';
+const WEB_LABEL = { sumB1: ['去程：先讀的合計', 'Σ後視'], sumF1: ['去程：後讀的合計', 'Σ前視'], hCD: ['去程高低差', 'hCD'], sumB2: ['回程：先讀的合計', 'Σ後視'], sumF2: ['回程：後讀的合計', 'Σ前視'], hDC: ['回程高低差', 'hDC'], W: ['來回誤差', '閉合差 W'], hAvg: ['平均高低差', 'h′CD'], HD: ['D 點的高度', 'HD'] };
+const CALC_WHY = {
+  sumB1: '把去程兩站「先讀」的數字加起來。', sumF1: '把去程兩站「後讀」的數字加起來。',
+  hCD: '先讀的合計減掉後讀的合計，就是 C 到 D 的高低差。正的代表 D 比較高。',
+  sumB2: '把回程兩站「先讀」的數字加起來。', sumF2: '把回程兩站「後讀」的數字加起來。',
+  hDC: '回程用一樣的算法。答案應該和去程差不多大、正負相反。',
+  W: '去程加回程應該剛好抵消成 0，沒抵消掉的就是誤差（取正值）。',
+  hAvg: '去程、回程取平均比較準。回程方向相反，所以先變號再平均。',
+  HD: 'C 的高度加上平均高低差，就是答案。' };
+const TERMS = [
+  ['level', '整平', '把儀器調到水平'], ['bs', '後視', '每一站「先讀」的那把尺'], ['fs', '前視', '每一站「後讀」的那把尺'],
+  ['tp', '轉點（TP）', '中途點的正式名稱，考卷寫 TP1、TP2'], ['back', '往測、返測', '去程叫往測，回程叫返測（用來檢查）'],
+  ['hCD', '高程差', '兩點的高低差'], ['W', '閉合差', '去程、回程沒抵消掉的誤差，7 mm 內不扣分'],
+  ['hAvg', '平均高程差', '往測、返測的平均'], ['HD', '高程', '一個點的高度']];
+let seenTerms = new Set(), cardSig = '', bookSig = '', progSig = '', ACTS = {}, nAct = 0, bookPref = { field: false, calc: true }, toastT = 0;
+function webReset() {
+  seenTerms = new Set(); cardSig = bookSig = progSig = ''; ACTS = {}; bookPref = { field: false, calc: true }; show($('toast'), false);
+  $('tel').classList.remove('big'); $('telBig').textContent = '看大一點'; $('telZoom').textContent = '放大';
+}
+function toast(html, ms) { const t = $('toast'); t.innerHTML = html; show(t, true); clearTimeout(toastT); toastT = setTimeout(() => show(t, false), ms); }
+// 做完一步：第一次遇到的名詞，這時候才告訴你它叫什麼
+function webDone(st) {
+  if (!st || !webOn() || MODE !== 'practice') return;
+  let tk = null, ok = '';
+  if (st.kind === 'level') { tk = 'level'; ok = '水平了'; }
+  else if (st.kind === 'aim') ok = '對準了';
+  else if (st.kind === 'focus') ok = '清楚了';
+  else if (st.kind === 'read') { tk = readOf(st.si, st.pt).col; ok = '讀對了'; }
+  else if (st.kind === 'move') { tk = st.to === 1 ? 'tp' : st.to === 2 ? 'back' : null; ok = '搬好了'; }
+  else if (st.kind === 'auto') tk = 'back';
+  else if (st.kind === 'calc') { tk = st.key === 'hDC' ? 'hCD' : st.key; ok = '算對了'; }
+  const t = TERMS.find(x => x[0] === tk);
+  if (t && !seenTerms.has(tk)) { seenTerms.add(tk); toast(`${ok ? '✓ ' + ok + '　' : ''}📘 這叫「<b>${t[1]}</b>」：${t[2]}`, 3600); }
+  else if (ok) toast('✓ ' + ok, 1200);
+}
+function B(label, fn, cls = '', hold = false, attr = '') { const id = 'a' + (nAct++); ACTS[id] = fn; return `<button data-a="${id}"${hold ? ' data-hold="1"' : ''} class="${cls}" ${attr}>${label}</button>`; }
+const CHAPS = () => PMODE === 'brief' ? ['任務', '第 1 站', '第 2 站', '回程', '計算', '完成'] : ['任務', '第 1 站', '第 2 站', '第 3 站', '第 4 站', '計算', '完成'];
+function chapOf(st) {
+  const ci = PMODE === 'brief' ? 4 : 5;
+  if (st.kind === 'done') return ci + 1;
+  if (st.kind === 'calc' || (st.kind === 'info' && st.table)) return ci;
+  if (st.kind === 'auto') return 3;
+  if (st.kind === 'move') return st.to + 1;
+  if (st.si !== undefined) return st.si + 1;
+  return 0;
+}
+function renderProg() {
+  const c = chapOf(steps[gi]), sig = PMODE + c; if (sig === progSig) return; progSig = sig;
+  $('prog').innerHTML = CHAPS().map((n, i) => `<span class="${i === c ? 'on' : i < c ? 'done' : ''}">${i < c ? '✓ ' : ''}${n}</span>`).join('');
+}
+const INTRO_SVG = `<svg viewBox="0 0 560 160" role="img" aria-label="路線示意圖"><path d="M0 132 L60 132 L280 114 L500 98 L560 98 L560 160 L0 160Z" fill="#efe5cf"/>
+<g fill="#e8d9a0" stroke="#b8a46a"><rect x="57" y="44" width="6" height="74"/><rect x="277" y="30" width="6" height="76"/><rect x="497" y="14" width="6" height="72"/></g>
+<rect x="56" y="118" width="8" height="14" fill="#9a7448"/><rect x="274" y="106" width="12" height="8" fill="#3a3d42"/><rect x="496" y="86" width="8" height="14" fill="#9a7448"/>
+<g stroke="#4a4740" stroke-width="2.5" fill="none"><path d="M170 64 L158 124 M170 64 L182 124"/><path d="M390 50 L378 108 M390 50 L402 108"/></g>
+<rect x="160" y="54" width="20" height="10" rx="2" fill="#4a4740"/><rect x="380" y="40" width="20" height="10" rx="2" fill="#4a4740"/>
+<g stroke="#c0281e" stroke-width="2" stroke-dasharray="6 4"><path d="M62 59 L278 59"/><path d="M282 45 L498 45"/></g>
+<g font-size="13" font-family="inherit" fill="#2b2a27" text-anchor="middle"><text x="60" y="152">C（30.000 m）</text><text x="280" y="152">中途點</text><text x="500" y="152">D（高度？）</text>
+<text x="170" y="140" fill="#6b6860">第 1 站</text><text x="390" y="124" fill="#6b6860">第 2 站</text></g>
+<g font-size="12" fill="#1f5fa8"><text x="68" y="54">先讀</text><text x="272" y="54" text-anchor="end">後讀</text><text x="288" y="40">先讀</text><text x="492" y="40" text-anchor="end">後讀</text></g>
+<text x="280" y="12" font-size="13" text-anchor="middle" fill="#6b6860">去程 C → D 量完，再從 D 走回 C 量一次檢查</text></svg>`;
+function calcParts(k) {
+  const v = vals, br = PMODE === 'brief';
+  switch (k) {
+    case 'sumB1': return ['C 先讀 + 中途點1 先讀', `${f3(v.bC)} + ${f3(v.bT1)}`];
+    case 'sumF1': return ['中途點1 後讀 + D 後讀', `${f3(v.fT1)} + ${f3(v.fD)}`];
+    case 'hCD': return br ? ['(C 先讀 + 中途點1 先讀) − (中途點1 後讀 + D 後讀)', `(${f3(v.bC)} + ${f3(v.bT1)}) − (${f3(v.fT1)} + ${f3(v.fD)})`] : ['先讀的合計 − 後讀的合計', `${f3(v.sumB1)} − ${f3(v.sumF1)}`];
+    case 'sumB2': return ['D 先讀 + 中途點2 先讀', `${f3(v.bD)} + ${f3(v.bT2)}`];
+    case 'sumF2': return ['中途點2 後讀 + C 後讀', `${f3(v.fT2)} + ${f3(v.fC)}`];
+    case 'hDC': return br ? ['(D 先讀 + 中途點2 先讀) − (中途點2 後讀 + C 後讀)', `(${f3(v.bD)} + ${f3(v.bT2)}) − (${f3(v.fT2)} + ${f3(v.fC)})`] : ['先讀的合計 − 後讀的合計', `${f3(v.sumB2)} − ${f3(v.sumF2)}`];
+    case 'W': return ['| 去程高低差 + 回程高低差 |', `| ${sg3(v.hCD)} + (${sg3(v.hDC)}) |`];
+    case 'hAvg': return ['(去程高低差 − 回程高低差) ÷ 2', `(${sg3(v.hCD)} − (${sg3(v.hDC)})) ÷ 2`];
+    case 'HD': return ['C 的高度 + 平均高低差', `${HC.toFixed(3)} + (${sg3(v.hAvg)})`];
+  }
+  return ['', ''];
+}
+const MOVE_PLAIN = {
+  1: '「中途點1」的尺留在原地不動。下一站從它接著量，高度才連得起來。',
+  2: '去程量完了！接著從 D 走回 C 再量一次，檢查有沒有量錯。回程改用「中途點2」。',
+  3: '再搬一次，量完就回到起點 C。' };
+function inputRow(read) {
+  return `<div class="row"><input class="inp" id="cInp" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${read ? '例如 1.513' : '數字或算式'}">${B('確認', submitPractice, 'pri')}${B(gShowHint ? '提示 ✓' : '給我提示', () => { gShowHint = true; drawFB(); }, 'ghost')}</div><div class="status" id="cMsg"></div>`;
+}
+function cardHTML(st) {
+  const brief = PMODE === 'brief', p = st.pt, end = h => `<div class="row end">${h}</div>`;
+  switch (st.kind) {
+    case 'info':
+      if (st.table) return `<h2>外業完成！開始計算</h2><p class="sub">8 個讀數都在左邊的記錄表裡。接下來${brief ? '只算 5 格' : '要算 9 格（和考卷一樣）'}，每一格都會告訴你怎麼算。</p>${end(B('開始計算 ▶', nextStep, 'pri'))}`;
+      return `<h2>任務：量出 D 點的高度</h2><p class="sub">已知 C 點高度 30.000 m。水準儀是會保持水平的望遠鏡：看兩把尺的數字差多少，就知道兩點差多高。</p>${INTRO_SVG}
+        <p class="sub">每一站都是：<b>調水平 → 對準尺 → 讀數字</b>。${brief ? '你親手做第 1 站，後面重複的部分系統會幫忙。' : '4 站全部自己做。'}</p>${end(B('開始 ▶', nextStep, 'pri'))}`;
+    case 'level': {
+      const sc = [0, 1, 2].map(k => `<div class="g" style="color:${SCREW_CSS[k]}">${SCREW_NAME[k]}色螺旋<div>${[-1, 1].map(d => B(d < 0 ? '↺' : '↻', () => turnScrew(k, d), '', true, `data-k="${k}" data-d="${d}" style="color:${SCREW_CSS[k]};border-color:${SCREW_CSS[k]}"`)).join('')}</div></div>`).join('');
+      return `<h2>${stN(st.si)}：先把儀器調水平</h2><p class="sub">轉腳下的三顆螺旋，讓白色氣泡跑進中間的圓圈。</p>
+        <div class="lvl"><div id="bubHost"></div><div class="screws">${sc}</div></div><div class="status" id="cStatus"></div>${end(B('幫我調好', autoLevel, 'ghost'))}`;
+    }
+    case 'aim': {
+      const r = readOf(st.si, p);
+      return `<h2>轉向「${PN[p]}」的尺</h2><p class="sub">${r.col === 'bs' ? '這一站先讀' : '接著讀'}「${PN[p]}」（橘色箭頭那把）。讓望遠鏡裡的直線壓在尺上。</p>
+        <div class="row">${B('◀◀', () => turnYaw(STEP.yawBig), '', true)}${B('◀ 微調', () => turnYaw(STEP.yawFine), '', true)}${B('微調 ▶', () => turnYaw(-STEP.yawFine), '', true)}${B('▶▶', () => turnYaw(-STEP.yawBig), '', true)}${B('自動對準', () => aimAt(p), 'ghost')}</div><div class="status" id="cStatus"></div>`;
+    }
+    case 'focus':
+      return `<h2>把「${PN[p]}」的尺調清楚</h2><p class="sub">畫面模糊就要對焦，跟手機相機對焦一樣。</p>
+        <div class="row">${B('◀ 看近一點', () => focusStep(-1), '', true)}${B('看遠一點 ▶', () => focusStep(1), '', true)}${B('自動對焦', () => focusTo(p), 'ghost')}</div><div class="status" id="cStatus"></div>`;
+    case 'read': {
+      const how = st.first || gShowHint ? `<div class="howto">① 找橫線<b>下面</b>最近的小黑字，例如 <b>149</b> → 1.49 m<br>② 估橫線比那條刻線高幾 mm，例如 3 → <b>1.493</b></div>` : '';
+      return `<h2>讀出「${PN[p]}」尺上的數字</h2><p class="sub">${st.assist ? '儀器已經自動調水平、對準、對焦，直接讀就好。' : '看右上望遠鏡中間那條長橫線，對到尺上哪裡？'}</p>${how}${inputRow(true)}
+        ${gShowHint ? `<div class="hint">提示：${readHint(trueRead(st.si, p).mid)}</div>` : ''}`;
+    }
+    case 'move':
+      return `<h2>搬到${stN(st.to)}</h2><p class="sub">${MOVE_PLAIN[st.to]}${st.auto ? '<br>（簡要練習：第 2 站會自動調好儀器，你只要讀數字。）' : ''}</p>
+        ${end(B('搬過去 ▶', () => { placeStation(st.to); if (st.auto) autoLevel(); nextStep(); }, 'pri'))}`;
+    case 'auto':
+      return `<h2>回程（第 3、4 站）由系統代做</h2><p class="sub">操作和去程一模一樣，這裡省略。4 個讀數已經填進左邊的記錄表。</p>${end(B('下一步 ▶', nextStep, 'pri'))}`;
+    case 'calc': {
+      const [lab, term] = WEB_LABEL[st.key], [word, sub] = calcParts(st.key);
+      const f = brief ? `<small>${word}</small>${sub} = ?` : `<small>公式</small>${word} = ?${gShowHint ? `<small style="margin-top:6px">代入</small>${sub}` : ''}`;
+      return `<h2>${lab} <span style="font-size:15px;color:#9a968c;font-weight:400">${term}</span></h2><p class="sub">${CALC_WHY[st.key]}</p><div class="formula">${f}</div>${inputRow(false)}
+        ${!brief && !gShowHint ? '<div class="hint">數字在左邊記錄表裡。</div>' : ''}`;
+    }
+    case 'done': {
+      const sc = scoreAll(vals, null), r = solve(vals);
+      const gl = TERMS.map(t => `<div><b>${t[1]}</b>${t[2]}</div>`).join('');
+      return `<h2>完成！如果這是考試：<span class="${sc.total >= 35 ? 'ok' : 'warn'}">${sc.total} / 35 分</span></h2>
+        <p class="sub">你算出 D 點高度 ${f3(vals.HD)} m${r ? `，來回誤差 ${Math.round(r.W * 1000)} mm（7 mm 內不扣分）` : ''}。</p>
+        <div class="gloss"><div style="font-weight:600">名詞小卡（考卷上會出現這些字）</div>${gl}</div>
+        <div class="row">${B(brief ? '改做完整練習' : '再練一次', () => startMode('practice', 'full'))}${B('挑戰實戰模式', () => startMode('exam'), 'pri')}${B('回選單', () => startMode('menu'), 'ghost')}</div>`;
+    }
+  }
+  return '';
+}
+// ── 實戰模式（電腦版）：沒有提示；點記錄表的格子選要填哪一格 ──
+const cellName = k => {
+  const r = READS.find(q => q.key === k);
+  if (r) return `${stN(r.si)}・${PN[r.pt]}・${r.col === 'bs' ? '先讀（後視）' : '後讀（前視）'}`;
+  return WEB_LABEL[k] ? `${WEB_LABEL[k][0]}（${WEB_LABEL[k][1]}）` : k;
+};
+function examHTML() {
+  const end = h => `<div class="row">${h}</div>`;
+  if (view === 'result') {
+    const sc = scoreAll(vals, meta2), over = examTime() > EXAM_LIMIT;
+    const rows = sc.it.map(([n, max, got, det]) => `<tr><td><b>${n}</b><br><span style="color:#6b6860">${det}</span></td><td style="text-align:right;white-space:nowrap" class="${(max ? got === max : got === 0) ? 'ok' : 'bad'}">${max ? `${got} / ${max}` : got ? `${got} 分` : '不扣分'}</td></tr>`).join('');
+    const refs = sc.ref.map(([n, det]) => `<div style="color:#6b6860;font-size:14px;margin-top:6px"><b>${n}</b>：${det}</div>`).join('');
+    return `<h2>評分結果：<span class="${sc.total >= 35 ? 'ok' : sc.total > 0 ? 'warn' : 'bad'}">${sc.total} / 35 分</span></h2><p class="sub">用時 ${mmss(examTime())}${over ? '（超過建議的 20 分鐘）' : ''}</p>
+      <div class="gloss"><table class="score">${rows}</table>${refs}</div>${end(B('看記錄表', () => { view = 'book'; drawFB(); }) + B('重新出題', () => startMode('exam'), 'pri') + B('回選單', () => startMode('menu'), 'ghost'))}`;
+  }
+  const inpRow = `<div class="row"><span style="font-size:15px">填入：<b>${cellName(cell)}</b></span></div><div class="row"><input class="inp" id="cInp" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${phase === 'field' ? '例如 1.513' : '數字或算式'}">${B('確認', commitCell, 'pri')}<span style="font-size:13px;color:#6b6860">點記錄表的格子可以改填別格</span></div><div class="status" id="cMsg"></div>`;
+  if (phase === 'field') {
+    const nx = (S.si + 1) % 4;
+    const sc = [0, 1, 2].map(k => `<div class="g" style="color:${SCREW_CSS[k]}">${SCREW_NAME[k]}<div>${[-1, 1].map(d => B(d < 0 ? '↺' : '↻', () => turnScrew(k, d), '', true, `style="color:${SCREW_CSS[k]};border-color:${SCREW_CSS[k]}"`)).join('')}</div></div>`).join('');
+    return `<h2>${stN(S.si)}（${S.si < 2 ? '去程' : '回程'}）<span id="cTimer" style="float:right;font-size:15px;font-weight:400;color:#6b6860"></span></h2>
+      <div class="lvl"><div id="bubHost"></div><div class="screws">${sc}</div></div>
+      <div class="row"><span style="width:3em">轉向</span>${B('◀◀', () => turnYaw(STEP.yawBig), '', true)}${B('◀', () => turnYaw(STEP.yawFine), '', true)}${B('▶', () => turnYaw(-STEP.yawFine), '', true)}${B('▶▶', () => turnYaw(-STEP.yawBig), '', true)}</div>
+      <div class="row"><span style="width:3em">對焦</span>${B('◀ 近', () => focusStep(-1), '', true)}${B('遠 ▶', () => focusStep(1), '', true)}</div>
+      ${inpRow}${end(B(`搬到${stN(nx)}`, () => { placeStation(nx); cell = READS.find(q => q.si === nx).key; inp = ''; drawFB(); }) + B('結束外業 → 計算', () => { if (confirm('結束外業後就不能再用儀器，確定嗎？')) toCalc(); }, 'pri'))}`;
+  }
+  return `<h2>計算並填寫答案 <span id="cTimer" style="float:right;font-size:15px;font-weight:400;color:#6b6860"></span></h2><p class="sub">已知 C 點高度 HC = ${HC.toFixed(3)} m。可以直接打算式，例如 2.000+1.600。</p>
+    ${inpRow}${end(B('交卷・評分', () => { if (confirm('確定交卷嗎？')) { view = 'result'; examEnd = performance.now(); drawFB(); } }, 'pri'))}`;
+}
+function renderCard() {
+  const exam = MODE === 'exam', st = exam ? null : steps[gi]; if (!exam && !st) return;
+  const sig = exam ? ['E', view, phase, S.si, cell, Object.keys(disp).length].join('|') : [gi, PMODE, gShowHint, steps.length].join('|');
+  if (sig === cardSig) return; cardSig = sig;
+  const c = $('card'); c.innerHTML = exam ? examHTML() : cardHTML(st);
+  const host = $('bubHost'); if (host) host.appendChild(bub.c);
+  const ie = $('cInp');
+  if (ie) {
+    ie.value = inp; ie.focus({ preventScroll: true });
+    ie.addEventListener('input', () => { inp = ie.value.slice(0, 160); inpMsg = ''; });
+    ie.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (MODE === 'exam') commitCell(); else submitPractice(); } e.stopPropagation(); });
+  }
+  document.documentElement.style.setProperty('--cardH', c.offsetHeight + 'px');
+}
+const setHTML = (el, h) => { if (el && el._h !== h) { el._h = h; el.innerHTML = h; } };
+function webDyn() {
+  if (MODE === 'exam') {
+    const t = $('cTimer'); if (t) setHTML(t, `${mmss(examTime())}（建議 20:00 內）`);
+    const ie = $('cInp'); if (ie && ie.value !== inp && (inp === '' || document.activeElement !== ie)) ie.value = inp;
+    setHTML($('cMsg'), inpMsg ? `<span style="color:${inpMsgCol}">${inpMsg}</span>` : '');
+    return;
+  }
+  const st = steps[gi]; if (!st) return;
+  const s = $('cStatus');
+  if (st.kind === 'level') {
+    const ok = G.length() <= LEVEL_OK, h = levelHint();
+    setHTML(s, ok ? '<span class="ok">✓ 水平了！保持一下…</span>' : '<span class="warn">照著<b>閃爍</b>的按鈕按（按住會一直轉，快好時改成點一下）</span>');
+    document.querySelectorAll('.screws button').forEach(b => b.classList.toggle('hot', !ok && +b.dataset.k === h.k && +b.dataset.d === h.d));
+  } else if (st.kind === 'aim') {
+    const d = angDiff(yawTo(st.pt), S.yaw) / DEG;
+    setHTML(s, aimPt === st.pt ? '<span class="ok">✓ 對準了！</span>' : `<span class="warn">${d > 0 ? '← 往左轉' : '往右轉 →'}，還差 ${Math.abs(d).toFixed(1)}°${Math.abs(d) > 3 ? '（先用 ◀◀ ▶▶ 大轉）' : ''}</span>`);
+  } else if (st.kind === 'focus') {
+    setHTML(s, aimPt !== st.pt ? '<span class="bad">鏡頭跑掉了，先轉回這把尺</span>' : blurBias < 0.6 ? '<span class="ok">✓ 清楚了！</span>' : `<span class="warn">${blurBias > 3 ? '還很模糊' : '快清楚了，再一點點'}（尺在 ${trueRead(S.si, st.pt).dist.toFixed(0)} m 外，現在對焦 ${Math.exp(S.lf).toFixed(0)} m）</span>`);
+  } else if (st.kind === 'read' || st.kind === 'calc') {
+    const ie = $('cInp'); if (ie && ie.value !== inp && (inp === '' || document.activeElement !== ie)) ie.value = inp;
+    const v = evalInp(inp, st.kind === 'read');
+    const pv = inp && isFinite(v) && !/^\d*\.?\d*$/.test(inp) ? `<span style="color:#6b6860;font-weight:400">= ${v.toFixed(3)}　按 Enter 確認</span>` : inp ? '<span style="color:#6b6860;font-weight:400">按 Enter 確認</span>' : '';
+    setHTML($('cMsg'), inpMsg ? `<span style="color:${inpMsgCol}">${inpMsg}</span>` : pv);
+  }
+}
+function bookHTML(open) {
+  const exam = MODE === 'exam', st = exam ? {} : steps[gi] || {}, hl = exam ? cell : st.key, n = READS.filter(q => disp[q.key] != null).length;
+  const ed = k => exam && examEditable(k);
+  const head = `<div class="bh">記錄表 <span style="font-weight:400;color:#6b6860">讀數 ${n}/8</span>${B(open ? '收合' : '展開', () => { bookPref[phaseOf()] = !open; bookSig = ''; })}</div>`;
+  if (!open) return head;
+  const td = k => k ? `<td class="${hl === k ? 'hl' : ''}${ed(k) ? ' ed' : ''}"${ed(k) ? ` data-cell="${k}"` : ''}>${disp[k] ?? ''}</td>` : '<td class="x"></td>';
+  const tbl = (title, rows, sb, sf, h) => `<div><div class="cap">${title}</div><table><tr><th>點</th><th>先讀<small>後視</small></th><th>後讀<small>前視</small></th></tr>`
+    + rows.map(([nm, t, b, f]) => `<tr><td class="name">${nm}${t ? `<small>${t}</small>` : ''}</td>${td(b)}${td(f)}</tr>`).join('')
+    + `<tr><td class="name">合計<small>Σ</small></td>${td(sb)}${td(sf)}</tr><tr><td class="name">高低差<small>${h}</small></td><td class="x"></td>${td(h)}</tr></table></div>`;
+  return head + `<div style="display:flex;gap:14px;flex-wrap:wrap">`
+    + tbl('去程 C → D', [['C', '', 'bC', null], ['中途點1', 'TP1', 'bT1', 'fT1'], ['D', '', null, 'fD']], 'sumB1', 'sumF1', 'hCD')
+    + tbl('回程 D → C', [['D', '', 'bD', null], ['中途點2', 'TP2', 'bT2', 'fT2'], ['C', '', null, 'fC']], 'sumB2', 'sumF2', 'hDC') + '</div>'
+    + `<table style="margin-top:8px">${[['W', '來回誤差', '閉合差 W'], ['hAvg', '平均高低差', 'h′CD'], ['HD', 'D 點高度', 'HD（C = 30.000）']].map(([k, a, t]) => `<tr><td class="name" style="min-width:150px">${a}<small>${t}</small></td>${td(k)}</tr>`).join('')}</table>`;
+}
+const phaseOf = () => { if (MODE === 'exam') return phase === 'field' && view === 'book' ? 'field' : 'calc'; const st = steps[gi]; return st && (st.kind === 'calc' || st.kind === 'done' || st.kind === 'auto' || (st.kind === 'info' && st.table)) ? 'calc' : 'field'; };
+function renderBook() {
+  const open = bookPref[phaseOf()], sig = [MODE, gi, cell, phase, open, Object.keys(disp).length, JSON.stringify(disp)].join('|');
+  if (sig === bookSig) return; bookSig = sig;
+  // 記錄表的按鈕和步驟卡共用 ACTS：用不重複的編號，所以不會互相蓋掉
+  $('book').innerHTML = bookHTML(open);
+}
+// 望遠鏡畫面：直接畫在螢幕右上角的圓框裡（沿用 VR 版的模糊與十字絲）
+const telScene = new THREE.Scene(), telOrtho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+{
+  const g = new THREE.CircleGeometry(1, 64);
+  const m0 = new THREE.Mesh(g, telMat), m1 = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: retT, transparent: true, depthTest: false })), m2 = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: retT2, transparent: true, depthTest: false }));
+  m0.position.z = -3; m1.position.z = -2; m2.position.z = -1; m1.renderOrder = 1; m2.renderOrder = 2; telScene.add(m0, m1, m2);
+  telScene.userData.labels = m2;      // 「上線／中線／下線」字樣：只有練習模式有
+}
+function renderTelWeb() {
+  const el = $('tel'); if (el.classList.contains('hide')) return;
+  telScene.userData.labels.visible = MODE === 'practice';
+  const r = el.getBoundingClientRect(), y = innerHeight - r.bottom;
+  renderer.setScissorTest(true); renderer.setViewport(r.left, y, r.width, r.height); renderer.setScissor(r.left, y, r.width, r.height);
+  renderer.autoClear = false; renderer.clearDepth(); renderer.render(telScene, telOrtho); renderer.autoClear = true;
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, innerWidth, innerHeight);
+}
+function webTick() {
+  const on = webOn(), prac = on && MODE === 'practice', st = prac ? steps[gi] : null, exam = on && MODE === 'exam';
+  show($('menu'), on && MODE === 'menu');
+  show($('card'), !!st || exam);
+  show($('book'), (!!st && !(st.kind === 'info' && !st.table)) || (exam && view === 'book'));
+  const telOn = (!!st && (st.kind === 'aim' || st.kind === 'focus' || st.kind === 'read')) || (exam && phase === 'field' && view === 'book');
+  show($('tel'), telOn); $('card').classList.toggle('side', telOn); show($('telZoom'), MODE === 'practice');
+  show($('tPrev'), !!st); show($('tSkip'), !!st && st.kind !== 'done');
+  show($('home'), !renderer.xr.isPresenting && homeShown);
+  if (st) { renderProg(); renderCard(); renderBook(); webDyn(); }
+  else if (exam) {
+    const c = view === 'result' ? 2 : phase === 'field' ? 0 : 1, sig = 'E' + c;
+    if (progSig !== sig) { progSig = sig; $('prog').innerHTML = ['實戰：外業（讀數）', '內業（計算）', '結果'].map((n, i) => `<span class="${i === c ? 'on' : i < c ? 'done' : ''}">${i < c ? '✓ ' : ''}${n}</span>`).join(''); }
+    renderCard(); if (view === 'book') renderBook(); webDyn();
+  }
+  else if (progSig !== MODE) { progSig = MODE; $('prog').innerHTML = ''; }
+}
+$('book').addEventListener('click', e => { const td = e.target.closest('td[data-cell]'); if (td && MODE === 'exam') { cell = td.dataset.cell; inp = ''; inpMsg = ''; drawFB(); } });
+// 卡片按鈕：一般按鈕點一下；data-hold 的按鈕按住會一直動（沿用 holdTick）
+$('ui').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });   // 不讓按鈕搶走焦點（不然按 Enter 會按到按鈕）
+$('ui').addEventListener('pointerdown', e => {
+  const b = e.target.closest('button[data-a]'); if (!b || !b.dataset.hold) return;
+  const fn = ACTS[b.dataset.a]; if (fn) { e.preventDefault(); fn(); held = { fn, t: 0, acc: 0 }; }
+});
+$('ui').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if (b && !b.dataset.hold && ACTS[b.dataset.a]) ACTS[b.dataset.a](); });
+$('tMenu').onclick = () => { if (MODE !== 'menu' && (MODE === 'exam' || gi > 0) && !confirm('回到選單會清掉目前的進度，確定嗎？')) return; startMode('menu'); };
+$('tPrev').onclick = () => prevStep();
+$('tSkip').onclick = () => skipStep();
+$('tHelp').onclick = () => $('help').classList.toggle('hide');
+$('home').onclick = () => returnHome();
+$('telZoom').onclick = () => { setZoom(telZoom === 1 ? 2 : 1); $('telZoom').textContent = telZoom === 1 ? '放大' : '原本倍率'; };
+$('telBig').onclick = () => { const b = $('tel').classList.toggle('big'); $('telBig').textContent = b ? '看小一點' : '看大一點'; };
 
 // ═════════════ 啟動 ═════════════
 setLayer(stationUI, UI);
@@ -1726,7 +2090,12 @@ renderer.setAnimationLoop(dbg.tick = (fixed) => {
   drawBubble(); renderTelescope(); ctrlPointTick();
   // three.js r160 的 VR 相機只看得到圖層 0~2；儀器、面板、手把都在圖層 5（UI），要手動打開，不然 VR 裡全部看不見
   if (renderer.xr.isPresenting) { const xc = renderer.xr.getCamera(); xc.layers.enable(UI); for (const c of xc.cameras) c.layers.enable(UI); }
+  // 電腦版：3D 面板只在這一幀畫面裡藏起來（狀態不動，進 VR 時原樣出現），改用網頁介面
+  webTick();
+  let hid = null;
+  if (webOn()) { hid = [...wins.map(w => w.g), telPanel, bub.mesh, homeBtn.mesh, ...labels.map(L => L.g)].filter(o => o.visible); hid.forEach(o => o.visible = false); }
   renderer.render(scene, camera);
+  if (hid) { hid.forEach(o => o.visible = true); renderTelWeb(); }
 });
 </script>
 </body>
